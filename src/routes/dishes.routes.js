@@ -1,8 +1,8 @@
 const { Router } = require("express");
 
-const DishController = require("../controller/DishController");
+const OrderController = require("../controller/OrderController");
 
-const dishRoutes = Router();
+const orderRoutes = Router();
 
 /*function myMiddleware(request, response, next) {
   console.log("Middleware");
@@ -13,8 +13,12 @@ const dishRoutes = Router();
   next();
 }
 */
-const dishController = new DishController();
+const orderController = new OrderController();
 
-dishRoutes.put("/:id", dishController.update);
+orderRoutes.put("/", orderController.create);
+orderRoutes.put("/", orderController.delete);
+orderRoutes.put("/", orderController.show);
+orderRoutes.put("/:id", orderController.index);
+orderRoutes.put("/:id", orderController.update);
 
-module.exports = dishRoutes;
+module.exports = orderRoutes;

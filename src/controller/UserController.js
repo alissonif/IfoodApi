@@ -5,23 +5,23 @@ const sqliteConnection = require("../database/sqlite");
 
 class UserController {
   async create(request, response) {
-    const { name, email, password } = request.body;
+    const { name, email, password, isAdmin } = request.body;
 
     const database = await sqliteConnection();
-    const checkUserExixts = await database.get(
+    const checkUserExists = await database.get(
       "select * from users where email= (?)",
       [email]
     );
 
-    if (checkUserExixts) {
+    if (checkUserExists) {
       throw new AppError("Este email já está em uso.");
     }
 
     const hashedPassword = await hash(password, 8);
 
     await database.run(
-      "insert into users (name, email, password) values(?, ?, ?)",
-      [name, email, hashedPassword]
+      "insert into users (name, email, password, isAdmin) values(?, ?, ?, ?)",
+      [name, email, hashedPassword, isAdmin]
     );
     return response.status(201).json();
   }

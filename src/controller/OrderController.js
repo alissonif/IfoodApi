@@ -2,8 +2,12 @@ const AppError = require("../utils/AppError");
 
 const sqliteConnection = require("../database/sqlite");
 
-class DishController {
-
+class OrderController {
+  async create(request, response) {}
+  async show(request, response) {}
+  async delete(request, response) {}
+  async index(request, response) {}
+  async update(request, response) {}
 }
 /* async update(request, response) {
   const { name, email } = request.body;
@@ -24,17 +28,19 @@ class DishController {
     throw new AppError("este email já esta em uso");
   }
 
-  user.name = name;
-  user.email = email;
+  user.name = name ?? user.name;
+  user.email = email ?? user.email;
 
   await database.run(
     `update users set 
   name = ?,
   email = ?,
-  created_at = ?
+  created_at = datetime('now') //updated_at
   where id = ?`,
     [user.name, user.email, new Date(), id]
   );
 
   return response.json();
 } */
+
+module.exports = OrderController;

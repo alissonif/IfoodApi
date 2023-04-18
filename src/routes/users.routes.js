@@ -16,6 +16,5 @@ const usersRoutes = Router();
 const userController = new UserController();
 
 usersRoutes.post("/", userController.create);
- 
 
 module.exports = usersRoutes;
