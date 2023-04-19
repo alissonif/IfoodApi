@@ -4,7 +4,13 @@ module.exports = {
   development: {
     client: 'sqlite3',
     connection: {
-      filename: path.relative(__dirname, ' ', "database", "database.db")
+      filename: path.resolve(__dirname, 'src', "database", "database.db")
+    },
+    pool:{
+      afterCreate:(conn, cb) => conn.run('praga foreign_keys = on', cb)
+    },
+    migrations:{
+      directory:path.resolve(__dirname,"src", "database", "knex", "migrations")
     },
     useNullAsDefault: true
   }
