@@ -6,7 +6,7 @@ const sqliteConnection = require("../database/sqlite");
 class UserController {
   async create(request, response) {
     const { name, email, password, isAdmin } = request.body;
-
+    
     const database = await sqliteConnection();
     const checkUserExists = await database.get(
       "select * from users where email= (?)",
@@ -15,6 +15,9 @@ class UserController {
 
     if (checkUserExists) {
       throw new AppError("Este email já está em uso.");
+    }
+    if(!checkUserExists){
+      console.log("Usuario criado com sucesso.");
     }
 
     const hashedPassword = await hash(password, 8);

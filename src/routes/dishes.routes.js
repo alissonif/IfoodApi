@@ -1,8 +1,8 @@
 const { Router } = require("express");
 
-const OrderController = require("../controller/OrderController");
+const DishesController = require("../controller/DishesController");
 
-const orderRoutes = Router();
+const dishesRoutes = Router();
 
 /*function myMiddleware(request, response, next) {
   console.log("Middleware");
@@ -13,12 +13,12 @@ const orderRoutes = Router();
   next();
 }
 */
-const orderController = new OrderController();
+const dishesController = new DishesController();
 
-orderRoutes.put("/", orderController.create);
-orderRoutes.put("/", orderController.delete);
-orderRoutes.put("/", orderController.show);
-orderRoutes.put("/:id", orderController.index);
-orderRoutes.put("/:id", orderController.update);
-
-module.exports = orderRoutes;
+dishesRoutes.post("/:user_id", dishesController.create);
+/* dishesRoutes.delete("/", dishesController.delete);
+dishesRoutes.get("/", dishesController.show);
+dishesRoutes.get("/:id", dishesController.index);
+dishesRoutes.put("/:id", dishesController.update);
+ */
+module.exports = dishesRoutes;
