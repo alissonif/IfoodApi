@@ -76,53 +76,84 @@ class DishesController {
     let dishes;
 
     if (ingredients) {
-      const filterIngredients = ingredients.split(',').map( ingredient => ingredient.trim());
-      console.log(filterIngredients);
-      dishes = await knex('ingredients')
-      .whereIn('name', filterIngredients)
+      const filterIngredients = ingredients
+        .split(",")
+        .map((ingredient) => ingredient.trim());
+
+      dishes = await knex("ingredients")
+        .select(["dishes.id", "dishes.title","dishes.image","dishes.description","dishes.category","dishes.price","dishes.user_id"])
+        .where("dishes.user_id", user_id)
+        .whereLike("dishes.title", `%${title}%`)
+        .whereIn("name", filterIngredients)
+        .innerJoin("dishes", "dishes.id", "ingredients.dish_id")
+        .orderBy("dishes.title");
     } else {
       dishes = await knex("dishes")
         .where({ user_id })
         .whereLike("title", `%${title}%`)
         .orderBy("title");
     }
-    return response.json(dishes);
+
+    const userIngredient = await knex("ingredients").where({ user_id });
+    const dishesWithIngredients = dishes.map((dish) => {
+      const dishIngredients = userIngredient.filter(
+        (ingredient) => ingredient.dish_id === dish.id
+      );
+      return {
+        ...dish,
+        ingredients: dishIngredients,
+      };
+    });
+    if (dishes.length > 0) {
+      return response.json(dishesWithIngredients);
+    } else {
+      response.status(404).send("Nenhum prato encontrado.");
+    }
   }
 
   async update(request, response) {
-    /* async update(request, response) {
-  const { name, email } = request.body;
-  const { id } = request.params;
-  const database = await sqliteConnection();
-  const user = await database.get("select * from users where id = ?", [id]);
+    const { id } = request.params;
+    const { title, image, category, description, price, ingredients } =
+      request.body;
+    const database = await sqliteConnection();
 
-  if (!user) {
-    throw new AppError("usuário não encontrado");
-  }
+    const dish = await database.get("select * from dishes where id = ?", [id]);
 
-  const userWithUpdatedEmail = await database.get(
-    "select * from users where email = ?",
-    [email]
-  );
+    if (!dish) {
+      throw new AppError("Prato não encontrado");
+    }
 
-  if (userWithUpdatedEmail && userWithUpdatedEmail.id !== user.id) {
-    throw new AppError("este email já esta em uso");
-  }
+    dish.title = title ?? dish.title;
+    dish.image = image ?? dish.image;
+    dish.category = category ?? dish.category;
+    dish.description = description ?? dish.description;
+    dish.price = price ?? dish.price;
 
-  user.name = name ?? user.name;
-  user.email = email ?? user.email;
+    await database.run(
+      `update dishes set 
+        title = ?,
+        image = ?,
+        description = ?,
+        category = ?,
+        price = ?,
+        update_at = datetime('now') 
+        where id = ?
+        `,
+      [dish.title, dish.image, dish.description, dish.category, dish.price, id]
+    );
+    // Delete existing ingredients for the dish
+    const up = await database.run("delete from ingredients where dish_id = ?", [id]);
+    console.log(up);
 
-  await database.run(
-    `update users set 
-  name = ?,
-  email = ?,
-  created_at = datetime('now') //updated_at
-  where id = ?`,
-    [user.name, user.email, new Date(), id]
-  );
+    // Insert new ingredients for the dish
+    for (const ingredient of ingredients) {
+      await database.run(
+        "insert into ingredients (name, dish_id) values (?, ?)",
+        [ingredient, id]
+      );
+    }
 
-  return response.json();
-} */
+    return response.json();
   }
 }
 
