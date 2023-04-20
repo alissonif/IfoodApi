@@ -16,17 +16,17 @@ class UserController {
     if (checkUserExists) {
       throw new AppError("Este email já está em uso.");
     }
-    if(!checkUserExists){
+  /*   if(!checkUserExists){
       console.log("Usuario criado com sucesso.");
     }
-
+ */
     const hashedPassword = await hash(password, 8);
 
     await database.run(
       "insert into users (name, email, password, isAdmin) values(?, ?, ?, ?)",
       [name, email, hashedPassword, isAdmin]
     );
-    return response.status(201).json();
+    return response.status(201).json({ message: "Usuário criado com sucesso." });
   }
 
 
