@@ -72,16 +72,24 @@ class DishesController {
 
   async index(request, response) {
     const { user_id, title, ingredients } = request.query;
-
+  
     let dishes;
-
+  
     if (ingredients) {
       const filterIngredients = ingredients
         .split(",")
         .map((ingredient) => ingredient.trim());
-
+  
       dishes = await knex("ingredients")
-        .select(["dishes.id", "dishes.title","dishes.image","dishes.description","dishes.category","dishes.price","dishes.user_id"])
+        .select([
+          "dishes.id",
+          "dishes.title",
+          "dishes.image",
+          "dishes.description",
+          "dishes.category",
+          "dishes.price",
+          "dishes.user_id",
+        ])
         .where("dishes.user_id", user_id)
         .whereLike("dishes.title", `%${title}%`)
         .whereIn("name", filterIngredients)
@@ -93,23 +101,24 @@ class DishesController {
         .whereLike("title", `%${title}%`)
         .orderBy("title");
     }
-
-    const userIngredient = await knex("ingredients").where({ user_id });
-    const dishesWithIngredients = dishes.map((dish) => {
-      const dishIngredients = userIngredient.filter(
-        (ingredient) => ingredient.dish_id === dish.id
-      );
-      return {
+  
+    const dishesWithIngredients = [];
+  
+    for (const dish of dishes) {
+      const dishIngredients = await knex("ingredients").where({ dish_id: dish.id });
+      dishesWithIngredients.push({
         ...dish,
         ingredients: dishIngredients,
-      };
-    });
-    if (dishes.length > 0) {
+      });
+    }
+  
+    if (dishesWithIngredients.length > 0) {
       return response.json(dishesWithIngredients);
     } else {
       response.status(404).send("Nenhum prato encontrado.");
     }
   }
+  
 
   async update(request, response) {
     const { id } = request.params;
@@ -141,11 +150,9 @@ class DishesController {
         `,
       [dish.title, dish.image, dish.description, dish.category, dish.price, id]
     );
-    // Delete existing ingredients for the dish
-    const up = await database.run("delete from ingredients where dish_id = ?", [id]);
-    console.log(up);
+    
+    await database.run("delete from ingredients where dish_id = ?", [id]);
 
-    // Insert new ingredients for the dish
     for (const ingredient of ingredients) {
       await database.run(
         "insert into ingredients (name, dish_id) values (?, ?)",
