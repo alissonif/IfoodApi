@@ -24,7 +24,7 @@ class UserController {
 
     await database.run(
       "insert into users (name, email, password, isAdmin) values(?, ?, ?, ?)",
-      [name, email, hashedPassword, isAdmin]
+      [name, email, hashedPassword, isAdmin ? true : false]
     );
     return response.status(201).json({ message: "Usuário criado com sucesso." });
   }

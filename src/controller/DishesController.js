@@ -7,15 +7,23 @@ class DishesController {
     const { title, image, description, category, price, ingredients } =
       request.body;
     const { user_id } = request.params;
-
     const database = await sqliteConnection();
-    const checkDishExists = await database.get(
-      "select * from dishes where title= (?)",
-      [title]
-    );
+    
+    const checkUserExists = await database.get(
+      "select * from users where id= (?)",
+      [user_id]
+      );
+      
+      if (!checkUserExists) {
+        throw new AppError("Este usuário não está cadastrado.");
+      }
+
+      const checkDishExists = await knex("dishes")
+      .where({ title: title, user_id: user_id })
+      .first();
 
     if (checkDishExists) {
-      throw new AppError("Este prato já foi cadastrado.");
+      throw new AppError("Este prato já foi cadastrado para este usuário.");
     }
 
     const [dish_id] = await knex("dishes").insert({
@@ -89,7 +97,7 @@ class DishesController {
           "dishes.category",
           "dishes.price",
           "dishes.user_id",
-          "dishes.update_at",
+          "dishes.updated_at",
         ])
         .where("dishes.user_id", user_id)
         .whereLike("dishes.title", `%${title}%`)
@@ -100,7 +108,7 @@ class DishesController {
       dishes = await knex("dishes")
         .where({ user_id })
         .whereLike("title", `%${title}%`)
-        .orderBy("update_at", "desc");
+        .orderBy("updated_at", "desc");
     }
 
     const dishesWithIngredients = [];
@@ -129,7 +137,6 @@ class DishesController {
     const database = await sqliteConnection();
 
     const dish = await database.get("select * from dishes where id = ?", [id]);
-
     if (!dish) {
       throw new AppError("Prato não encontrado");
     }
@@ -151,7 +158,7 @@ class DishesController {
         category = ?,
         price = ?,
         user_id = ?,
-        update_at = datetime('now') 
+        updated_at = datetime('now') 
         where id = ?
         `,
       [
@@ -174,7 +181,7 @@ class DishesController {
       );
     }
 
-    return response.json(user_id);
+    return response.status(200).json({ message: "Prato Atualizado com sucesso!" });
   }
 }
 

@@ -2,13 +2,12 @@ const knex = require("../database/knex");
 
 class IngredientsController {
   async index(request, response) {
-    const { user_id } = request.params;
-    console.log(user_id);
+    const { user_id } = request.query;
     let ingredients = await knex("ingredients");
     const dishesWithIngredients = [];
 
     for (const ingredient of ingredients) {
-      await knex("ingredients").where({ user_id }).orderBy("id", "asc");
+      await knex("ingredients").orderBy('created_at', 'desc').
       dishesWithIngredients.push({
         ...ingredient,
       });
