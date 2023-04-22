@@ -8,17 +8,17 @@ class DishesController {
       request.body;
     const { user_id } = request.params;
     const database = await sqliteConnection();
-    
+
     const checkUserExists = await database.get(
       "select * from users where id= (?)",
       [user_id]
-      );
-      
-      if (!checkUserExists) {
-        throw new AppError("Este usuário não está cadastrado.");
-      }
+    );
 
-      const checkDishExists = await knex("dishes")
+    if (!checkUserExists) {
+      throw new AppError("Este usuário não está cadastrado.");
+    }
+
+    const checkDishExists = await knex("dishes")
       .where({ title: title, user_id: user_id })
       .first();
 
@@ -51,6 +51,11 @@ class DishesController {
     const { id } = request.params;
 
     const dish = await knex("dishes").where({ id }).first();
+
+    if (!dish) {
+      throw new AppError("Nenhum prato não cadastrado");
+    }
+
     const ingredients = await knex("ingredients")
       .where({ dish_id: id })
       .orderBy("name");
@@ -181,7 +186,9 @@ class DishesController {
       );
     }
 
-    return response.status(200).json({ message: "Prato Atualizado com sucesso!" });
+    return response
+      .status(200)
+      .json({ message: "Prato Atualizado com sucesso!" });
   }
 }
 
