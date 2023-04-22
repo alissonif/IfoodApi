@@ -2,21 +2,17 @@ const knex = require("../database/knex");
 
 class IngredientsController {
   async index(request, response) {
-    const { user_id } = request.query;
-    let ingredients = await knex("ingredients");
-    const dishesWithIngredients = [];
+    const {user_id} = request.params; // assume-se que a rota inclui um parâmetro "user_id"
+    const ShowAllIngredintes= await knex('ingredients')
+    //console.log(ShowAllIngredintes)
 
-    for (const ingredient of ingredients) {
-      await knex("ingredients").orderBy('created_at', 'desc').
-      dishesWithIngredients.push({
-        ...ingredient,
-      });
-    }
-    if (!user_id) {
-      return response.json("error");
-    } else {
-      return response.json(dishesWithIngredients);
-    }
+    const ingredients = await knex("ingredients")
+      .where({ user_id }).orderBy("updated_at", "desc");
+    return response.json(ingredients);
+  }
+  async show(request, response) {
+    const ingredients = await knex("ingredients").orderBy("updated_at", "desc");
+    return response.json(ingredients)
   }
 }
 
