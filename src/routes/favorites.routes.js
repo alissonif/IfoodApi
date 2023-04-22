@@ -8,7 +8,7 @@ const favoritesController = new FavoritesController();
 
 
 favoritesRoutes.get("/", favoritesController.index);
-favoritesRoutes.get("/:id", favoritesController.create);
+favoritesRoutes.post("/", favoritesController.create);
 favoritesRoutes.delete("/:id", favoritesController.delete);
 
-module.exports = ingredientsRoutes;
+module.exports = favoritesRoutes;

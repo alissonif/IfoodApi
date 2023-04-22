@@ -2,7 +2,7 @@ const knex = require("../database/knex");
 
 class IngredientsController {
   async index(request, response) {
-    const {user_id} = request.params; // assume-se que a rota inclui um parâmetro "user_id"
+    const {user_id} = request.params; 
     const ShowAllIngredintes= await knex('ingredients')
     //console.log(ShowAllIngredintes)
 
