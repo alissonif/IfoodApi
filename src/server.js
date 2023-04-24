@@ -32,4 +32,4 @@ app.use((error, request, response, next) => {
 });
 
 const port = 3000;
-app.listen(port, () => console.log("sucesso"));
+app.listen(port, () => console.log());
