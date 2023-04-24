@@ -6,7 +6,7 @@ class DishesController {
   async create(request, response) {
     const { title, image, description, category, price, ingredients } =
       request.body;
-    const { user_id } = request.params;
+    const user_id  = request.user.id;
     const database = await sqliteConnection();
 
     const checkUserExists = await database.get(
@@ -84,7 +84,8 @@ class DishesController {
   }
 
   async index(request, response) {
-    const { user_id, title, ingredients } = request.query;
+    const { title, ingredients } = request.query;
+    const user_id  = request.user.id;
 
     let dishes;
 
@@ -137,6 +138,10 @@ class DishesController {
 
   async update(request, response) {
     const { id } = request.params;
+    //const user_id=request.user.id;
+    //console.log(user_id)
+    //const id  = request.user.id;
+    //console.log(id)
     const { title, image, category, description, price, ingredients } =
       request.body;
     const database = await sqliteConnection();
@@ -145,6 +150,7 @@ class DishesController {
     if (!dish) {
       throw new AppError("Prato não encontrado");
     }
+    const { user_id } = dish;
 
     dish.title = title ?? dish.title;
     dish.image = image ?? dish.image;
@@ -153,7 +159,7 @@ class DishesController {
     dish.price = price ?? dish.price;
     //dish.user_id = user_id ?? dish.user_id;
 
-    const { user_id } = dish;
+ 
 
     await database.run(
       `update dishes set 

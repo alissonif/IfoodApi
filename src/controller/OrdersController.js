@@ -5,27 +5,13 @@ const sqliteConnection = require("../database/sqlite");
 const database = require("../database/knex");
 
 class OrdersController {
-  async index(req, res) {
-    const orders = await database("orders").select("*");
-    return res.json(orders);
-  }
-
-  async show(req, res) {
-    const { id } = req.params;
-    const order = await database("orders").where({ id }).first();
-    if (!order) {
-      return res.status(404).json({ error: "Order not found" });
-    }
-    return res.json(order);
-  }
-
-  async create(req, res) {
-    const { id_user, status, details } = req.body;
+  async create(request, response) {
+    const { user_id, status, details } = request.body;
     const created_at = new Date();
     const update_at = new Date();
 
     const [id] = await database("orders").insert({
-      id_user,
+      user_id,
       status,
       details,
       created_at,
@@ -34,17 +20,17 @@ class OrdersController {
 
     const order = await database("orders").where({ id }).first();
 
-    return res.json(order);
+    return response.json(order);
   }
 
-  async update(req, res) {
-    const { id } = req.params;
-    const { status, details } = req.body;
+  async update(request, response) {
+    const { id } = request.params;
+    const { status, details } = request.body;
     const update_at = new Date();
 
     const order = await database("orders").where({ id }).first();
     if (!order) {
-      return res.status(404).json({ error: "Order not found" });
+      return response.status(404).json({ error: "Order not found" });
     }
 
     await database("orders")
@@ -53,21 +39,34 @@ class OrdersController {
 
     const updatedOrder = await database("orders").where({ id }).first();
 
-    return res.json(updatedOrder);
+    return response.json(updatedOrder);
+  }
+  async index(request, response) {
+    const orders = await database("orders").select("*");
+    return response.json(orders);
   }
 
-  async delete(req, res) {
-    const { id } = req.params;
+/*   async show(request, response) {
+    const { id } = request.params;
+    const order = await database("orders").where({ id }).first();
+    if (!order) {
+      return response.status(404).json({ error: "Order not found" });
+    }
+    return response.json(order);
+  }
+
+  async delete(request, response) {
+    const { id } = request.params;
 
     const order = await database("orders").where({ id }).first();
     if (!order) {
-      return res.status(404).json({ error: "Order not found" });
+      return response.status(404).json({ error: "Order not found" });
     }
 
     await database("orders").where({ id }).delete();
 
-    return res.status(204).send();
-  }
+    return response.status(204).send();
+  } */
 }
 
 module.exports = OrdersController;

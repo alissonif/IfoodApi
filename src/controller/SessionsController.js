@@ -6,8 +6,8 @@ const { sign } = require("jsonwebtoken");
 // const { user } = require("express/lib/router");
 
 class SessionsController {
-  async create(req, res) {
-    const { email, password } = req.body;
+  async create(request, response) {
+    const { email, password } = request.body;
 
     const user = await knex("users").where({ email }).first();
     if (!user) {
@@ -28,7 +28,7 @@ class SessionsController {
       expiresIn,
     });
 
-    return res.json({user, token});
+    return response.json({ user, token });
   }
 }
 

@@ -3,7 +3,9 @@ const AppError = require("../utils/AppError");
 
 class IngredientsController {
   async index(request, response) {
-    const {user_id} = request.params; 
+    //const {user_id} = request.params; 
+    const user_id  = request.user.id;
+
     const ShowAllIngredintes= await knex('ingredients')
     //console.log(ShowAllIngredintes)
     
