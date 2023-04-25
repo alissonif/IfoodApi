@@ -1,12 +1,13 @@
 const knex = require("../database/knex");
 const sqliteConnection = require("../database/sqlite");
 const AppError = require("../utils/AppError");
+const removeAccents = require('remove-accents');
 
 class DishesController {
   async create(request, response) {
     const { title, image, description, category, price, ingredients } =
       request.body;
-    const user_id  = request.user.id;
+    const user_id = request.user.id;
     const database = await sqliteConnection();
 
     const checkUserExists = await database.get(
@@ -27,7 +28,8 @@ class DishesController {
     }
 
     const [dish_id] = await knex("dishes").insert({
-      title,
+      title: removeAccents(title),
+      //title,
       image,
       description,
       category,
@@ -37,7 +39,8 @@ class DishesController {
 
     const ingredientsInsert = ingredients.map((ingredient) => {
       return {
-        name: ingredient,
+        name: removeAccents(ingredient),
+        //name: ingredient,
         dish_id,
         user_id,
       };
@@ -85,7 +88,7 @@ class DishesController {
 
   async index(request, response) {
     const { title, ingredients } = request.query;
-    const user_id  = request.user.id;
+    const user_id = request.user.id;
 
     let dishes;
 
@@ -94,7 +97,7 @@ class DishesController {
         .split(",")
         .map((ingredient) => ingredient.trim());
 
-      dishes = await knex("ingredients")
+        dishes = await knex("ingredients")
         .select([
           "dishes.id",
           "dishes.title",
@@ -107,8 +110,12 @@ class DishesController {
         ])
         .where("dishes.user_id", user_id)
         .whereLike("dishes.title", `%${title}%`)
-        .whereIn("name", filterIngredients)
         .innerJoin("dishes", "dishes.id", "ingredients.dish_id")
+        .andWhere((builder) => {
+          filterIngredients.forEach((ingredient) => {
+            builder.orWhere("ingredients.name", "LIKE", `%${ingredient}%`);
+          });
+        })
         .orderBy("dishes.title");
     } else {
       dishes = await knex("dishes")
@@ -158,8 +165,6 @@ class DishesController {
     dish.description = description ?? dish.description;
     dish.price = price ?? dish.price;
     //dish.user_id = user_id ?? dish.user_id;
-
- 
 
     await database.run(
       `update dishes set 
