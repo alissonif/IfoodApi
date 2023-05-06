@@ -5,12 +5,15 @@ const AppError = require("./utils/AppError");
 const express = require("express");
 const routes = require("./routes/");
 const uploadConfig= require("./configs/upload");
+const morgan = require("morgan");
 
 migrationsRun();
 
 const app = express();
 
 app.use(express.json());
+
+app.use(morgan('dev'))
 
 app.use(routes);
 
@@ -32,4 +35,4 @@ app.use((error, request, response, next) => {
 });
 
 const port = 3000;
-app.listen(port, () => console.log());
+app.listen(port, () => console.log('olá'));

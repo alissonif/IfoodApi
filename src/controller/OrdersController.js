@@ -1,72 +1,75 @@
-const AppError = require("../utils/AppError");
-
-const sqliteConnection = require("../database/sqlite");
-
-const database = require("../database/knex");
+const knex = require("../database/knex");
 
 class OrdersController {
   async create(request, response) {
-    const { user_id, status, details } = request.body;
-    const created_at = new Date();
-    const update_at = new Date();
+    const { status, payment, orders } = request.body;
+    const user_id = request.user.id;
 
-    const [id] = await database("orders").insert({
-      user_id,
+    const [order_id] = await knex("orders").insert({
       status,
-      details,
-      created_at,
-      update_at,
+      payment,
+      user_id,
+    }).returning('id');
+    
+    console.log('order id', order_id);
+    
+    const ordersInsert = orders.map((order) => {
+      return {
+        title: order.title,
+        quantity: order.quantity,
+        order_id:order_id.id,
+        dish_id: order.id,
+      };
     });
+    
+    console.log(ordersInsert)
 
-    const order = await database("orders").where({ id }).first();
-
-    return response.json(order);
+    await knex("orderItems").insert(ordersInsert);
+    return response.status(201).json();
   }
 
   async update(request, response) {
-    const { id } = request.params;
-    const { status, details } = request.body;
-    const update_at = new Date();
+    const { id, status } = request.body;
 
-    const order = await database("orders").where({ id }).first();
-    if (!order) {
-      return response.status(404).json({ error: "Order not found" });
-    }
+    await knex("carts").update({ status }).where({ id });
 
-    await database("orders")
-      .where({ id })
-      .update({ status, details, update_at });
-
-    const updatedOrder = await database("orders").where({ id }).first();
-
-    return response.json(updatedOrder);
+    return response.status(201).json();
   }
+
   async index(request, response) {
-    const orders = await database("orders").select("*");
-    return response.json(orders);
+    const allCarts = await knex("carts");
+    const orders = await knex("cartItems");
+
+    const cartsWithOrders = allCarts.map((cart) => {
+      const cartOrder = orders.filter((order) => order.cart_id === cart.id);
+
+      return {
+        ...cart,
+        orders: cartOrder,
+      };
+    });
+    return response.status(201).json(cartsWithOrders);
   }
 
-/*   async show(request, response) {
+  async show(request, response) {
     const { id } = request.params;
-    const order = await database("orders").where({ id }).first();
-    if (!order) {
-      return response.status(404).json({ error: "Order not found" });
-    }
-    return response.json(order);
+
+    const cart = await knex("carts").where({ user_id: id }).first();
+    const orders = await knex("cartItems").where({ cart_id: id });
+
+    return response.status(201).json({
+      ...cart,
+      orders,
+    });
   }
 
   async delete(request, response) {
     const { id } = request.params;
 
-    const order = await database("orders").where({ id }).first();
-    if (!order) {
-      return response.status(404).json({ error: "Order not found" });
-    }
+    await knex("carts").where({ user_id: id }).delete();
 
-    await database("orders").where({ id }).delete();
-
-    return response.status(204).send();
-  } */
+    return response.status(201).json();
+  }
 }
 
 module.exports = OrdersController;
