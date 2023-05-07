@@ -1,7 +1,7 @@
 const knex = require("../database/knex");
 const sqliteConnection = require("../database/sqlite");
 const AppError = require("../utils/AppError");
-const removeAccents = require('remove-accents');
+const removeAccents = require("remove-accents");
 
 class DishesController {
   async create(request, response) {
@@ -29,7 +29,6 @@ class DishesController {
 
     const [dish_id] = await knex("dishes").insert({
       title: removeAccents(title),
-      //title,
       image,
       description,
       category,
@@ -40,7 +39,6 @@ class DishesController {
     const ingredientsInsert = ingredients.map((ingredient) => {
       return {
         name: removeAccents(ingredient),
-        //name: ingredient,
         dish_id,
         user_id,
       };
@@ -48,6 +46,61 @@ class DishesController {
     await knex("ingredients").insert(ingredientsInsert);
 
     return response.status(201).json({ message: "Prato criado com sucesso!" });
+  }
+
+  async update(request, response) {
+    const { id } = request.params;
+
+    const { title, image, category, description, price, ingredients } =
+      request.body;
+    const database = await sqliteConnection();
+
+    const dish = await database.get("select * from dishes where id = ?", [id]);
+    if (!dish) {
+      throw new AppError("Prato não encontrado");
+    }
+    const { user_id } = dish;
+
+    dish.title = title ?? dish.title;
+    dish.image = image ?? dish.image;
+    dish.category = category ?? dish.category;
+    dish.description = description ?? dish.description;
+    dish.price = price ?? dish.price;
+
+    await database.run(
+      `update dishes set 
+        title = ?,
+        image = ?,
+        description = ?,
+        category = ?,
+        price = ?,
+        user_id = ?,
+        updated_at = datetime('now') 
+        where id = ?
+        `,
+      [
+        dish.title,
+        dish.image,
+        dish.description,
+        dish.category,
+        dish.price,
+        dish.user_id,
+        id,
+      ]
+    );
+
+    await database.run("DELETE FROM ingredients WHERE dish_id = ?", [id]);
+
+    for (const ingredient of ingredients) {
+      await database.run(
+        "insert into ingredients (name, dish_id, user_id) values (?, ?, ?)",
+        [ingredient, id, user_id]
+      );
+    }
+
+    return response
+      .status(200)
+      .json({ message: "Prato Atualizado com sucesso!" });
   }
 
   async show(request, response) {
@@ -68,24 +121,6 @@ class DishesController {
     });
   }
 
-  async delete(request, response) {
-    const { id } = request.params;
-
-    const database = await sqliteConnection();
-    const checkDishExists = await database.get(
-      "select * from dishes where id = (?)",
-      [id]
-    );
-
-    if (!checkDishExists) {
-      throw new AppError("Este prato já foi deletado ou index incorreto.");
-    }
-
-    await knex("dishes").where({ id }).delete();
-
-    return response.json({ message: "Prato deletado com sucesso!" });
-  }
-
   async index(request, response) {
     const { title, ingredients } = request.query;
     const user_id = request.user.id;
@@ -97,7 +132,7 @@ class DishesController {
         .split(",")
         .map((ingredient) => ingredient.trim());
 
-        dishes = await knex("ingredients")
+      dishes = await knex("ingredients")
         .select([
           "dishes.id",
           "dishes.title",
@@ -143,63 +178,22 @@ class DishesController {
     }
   }
 
-  async update(request, response) {
+  async delete(request, response) {
     const { id } = request.params;
-    //const user_id=request.user.id;
-    //console.log(user_id)
-    //const id  = request.user.id;
-    //console.log(id)
-    const { title, image, category, description, price, ingredients } =
-      request.body;
+
     const database = await sqliteConnection();
-
-    const dish = await database.get("select * from dishes where id = ?", [id]);
-    if (!dish) {
-      throw new AppError("Prato não encontrado");
-    }
-    const { user_id } = dish;
-
-    dish.title = title ?? dish.title;
-    dish.image = image ?? dish.image;
-    dish.category = category ?? dish.category;
-    dish.description = description ?? dish.description;
-    dish.price = price ?? dish.price;
-    //dish.user_id = user_id ?? dish.user_id;
-
-    await database.run(
-      `update dishes set 
-        title = ?,
-        image = ?,
-        description = ?,
-        category = ?,
-        price = ?,
-        user_id = ?,
-        updated_at = datetime('now') 
-        where id = ?
-        `,
-      [
-        dish.title,
-        dish.image,
-        dish.description,
-        dish.category,
-        dish.price,
-        dish.user_id,
-        id,
-      ]
+    const checkDishExists = await database.get(
+      "select * from dishes where id = (?)",
+      [id]
     );
 
-    await database.run("DELETE FROM ingredients WHERE dish_id = ?", [id]);
-
-    for (const ingredient of ingredients) {
-      await database.run(
-        "insert into ingredients (name, dish_id, user_id) values (?, ?, ?)",
-        [ingredient, id, user_id]
-      );
+    if (!checkDishExists) {
+      throw new AppError("Este prato já foi deletado ou index incorreto.");
     }
 
-    return response
-      .status(200)
-      .json({ message: "Prato Atualizado com sucesso!" });
+    await knex("dishes").where({ id }).delete();
+
+    return response.json({ message: "Prato deletado com sucesso!" });
   }
 }
 
