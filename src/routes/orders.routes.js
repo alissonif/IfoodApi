@@ -13,8 +13,14 @@ ordersRoutes.use(ensureAuthenticated);
 ordersRoutes.post("/", ordersController.create);
 
 ordersRoutes.get("/:id", ordersController.show);
-ordersRoutes.delete("/:id", ordersController.delete);
-ordersRoutes.get("/", ensureAuthenticatedIsAdmin, ordersController.index);
-ordersRoutes.put("/",ensureAuthenticatedIsAdmin, ordersController.update);
+ordersRoutes.get("/", ordersController.index);
+
+ordersRoutes.put("/:id", ensureAuthenticatedIsAdmin, ordersController.update);
+//ordersRoutes.put("/", ensureAuthenticatedIsAdmin, ordersController.update);
+
+ordersRoutes.delete("/index/:id", ordersController.deleteIndex);
+ordersRoutes.delete("/:id", ordersController.deleteShow);
+
+
 
 module.exports = ordersRoutes;

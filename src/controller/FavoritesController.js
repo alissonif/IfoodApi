@@ -49,7 +49,7 @@ class FavoritesController {
     }
 
     const favorite = await knex("favorites").where("id", user_id).first();
-
+console.log(favorite)
     if (!favorite) {
       throw new AppError("Favorito não existe.");
     }
