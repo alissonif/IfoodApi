@@ -116,7 +116,7 @@ class OrdersController {
     });
   }
 
-  async update(request, response) {
+  async updateStatus(request, response) {
     const { id } = request.params;
     const { status } = request.body;
 
@@ -125,17 +125,48 @@ class OrdersController {
       throw new AppError(`Pedido com ID ${id} não encontrado.`, 404);
     }
 
-    const updateStatus=await knex("orders")
+    const updateStatus = await knex("orders")
       .update({ status, updated_at: knex.fn.now() })
       .where({ id });
 
-      return response.json({
-        message: "Status atualizado com sucesso.",
-        status: updateStatus,
-      });
+    return response.json({
+      message: "Status atualizado com sucesso.",
+      status: updateStatus,
+    });
   }
 
-  async deleteIndex(request, response) {
+  async update(request, response) {
+    const user_id = request.user.id;
+    const { id } = request.params;
+
+    const { status, payment, orderItems } = request.body;
+
+    await knex.transaction(async (trx) => {
+      if (status) {
+        await trx("orders")
+          .update({ status, updated_at: knex.fn.now() })
+          .where({ id });
+      }
+
+      if (payment) {
+        await trx("orders").update({ payment }).where({ id });
+      }
+
+      if (orderItems) {
+        for (let orderItem of orderItems) {
+          const { id: orderItemId, quantity, title } = orderItem;
+
+          await trx("orderItems")
+            .update({ quantity, title })
+            .where({ id: orderItemId });
+        }
+      }
+    });
+
+    return response.status(200).json(orderItems);
+  }
+
+  async deleteAll(request, response) {
     const { id } = request.params;
 
     const order = await knex("orders").where({ user_id: id }).delete();
@@ -146,11 +177,11 @@ class OrdersController {
 
     return response.json({
       message: `Todos Pedidos desse ID ${id} excluídos com sucesso.`,
-      order
+      order,
     });
   }
 
-  async deleteShow(request, response) {
+  async deleteOne(request, response) {
     const { id } = request.params;
 
     const order = await knex("orders").where({ id }).first();

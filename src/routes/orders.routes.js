@@ -15,11 +15,11 @@ ordersRoutes.post("/", ordersController.create);
 ordersRoutes.get("/:id", ordersController.show);
 ordersRoutes.get("/", ordersController.index);
 
-ordersRoutes.put("/:id", ensureAuthenticatedIsAdmin, ordersController.update);
-//ordersRoutes.put("/", ensureAuthenticatedIsAdmin, ordersController.update);
+ordersRoutes.put("/:id", ordersController.update);
+ordersRoutes.put("/:id", ensureAuthenticatedIsAdmin, ordersController.updateStatus);
 
-ordersRoutes.delete("/index/:id", ordersController.deleteIndex);
-ordersRoutes.delete("/:id", ordersController.deleteShow);
+ordersRoutes.delete("/index/:id", ordersController.deleteAll);
+ordersRoutes.delete("/:id", ordersController.deleteOne);
 
 
 
