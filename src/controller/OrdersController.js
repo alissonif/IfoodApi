@@ -76,7 +76,7 @@ class OrdersController {
       return response.status(201).json(cartWithOrders);
     } else {
       const orders = await knex("orders").where({ user_id });
-      const orderItems = await knex("orderItems");
+      const orderItems = await knex("orderItems").where({ user_id });;
       const cartWithOrders = orders.map((cart) => {
         const Order = orderItems.filter((order) => order.order_id === cart.id);
 

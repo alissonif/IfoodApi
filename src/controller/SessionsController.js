@@ -3,23 +3,19 @@ const { compare } = require("bcryptjs");
 const AppError = require("../utils/AppError");
 const authConfig = require("../configs/auth");
 const { sign } = require("jsonwebtoken");
-// const { user } = require("express/lib/router");
-
 class SessionsController {
   async create(request, response) {
     const { email, password } = request.body;
 
     const user = await knex("users").where({ email }).first();
     if (!user) {
-      throw new AppError("E-mail incorreto", 401);
-      // throw new AppError("E-mail e/ou senha incorreta", 401);
+      throw new AppError("E-mail e/ou senha incorreta", 401);
     }
 
     const passwordMatched = await compare(password, user.password);
 
     if (!passwordMatched) {
-      throw new AppError("Senha incorreta", 401);
-      // throw new AppError("E-mail e/ou senha incorreta", 401);
+      throw new AppError("E-mail e/ou senha incorreta", 401);
     }
 
     const { secret, expiresIn } = authConfig.jwt;
