@@ -57,52 +57,19 @@ class OrdersController {
   }
 
   async index(request, response) {
-    const user_id = request.user.id;
+    const orders = await knex("orders");
+    const orderItems = await knex("orderItems");
 
-    const user = await knex("users").where({ id: user_id }).first();
+    const cartWithOrders = orders.map((cart) => {
+      const Order = orderItems.filter((order) => order.order_id === cart.id);
 
-    if (user.isAdmin === 1) {
-      const orders = await knex("orders");
-      const orderItems = await knex("orderItems");
-
-      const cartWithOrders = orders.map((cart) => {
-        const Order = orderItems.filter((order) => order.order_id === cart.id);
-
-        return {
-          ...cart,
-          orders: Order,
-        };
-      });
-      return response.status(201).json(cartWithOrders);
-    } else {
-      const orders = await knex("orders").where({ user_id });
-      const orderItems = await knex("orderItems").where({ user_id });;
-      const cartWithOrders = orders.map((cart) => {
-        const Order = orderItems.filter((order) => order.order_id === cart.id);
-
-        return {
-          ...cart,
-          orders: Order,
-        };
-      });
-      return response.status(201).json(cartWithOrders);
-    }
+      return {
+        ...cart,
+        orders: Order,
+      };
+    });
+    return response.status(201).json(cartWithOrders);
   }
-
-  // async index(request, response) {
-  //   const orders = await knex("orders");
-  //   const orderItems = await knex("orderItems");
-
-  //   const cartWithOrders = orders.map((cart) => {
-  //     const Order = orderItems.filter((order) => order.order_id === cart.id);
-
-  //     return {
-  //       ...cart,
-  //       orders: Order,
-  //     };
-  //   });
-  //   return response.status(201).json(cartWithOrders);
-  // }
 
   async show(request, response) {
     const { id } = request.params;
@@ -136,7 +103,6 @@ class OrdersController {
   }
 
   async update(request, response) {
-    const user_id = request.user.id;
     const { id } = request.params;
 
     const { status, payment, orderItems } = request.body;
